@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Absensi Siswa - SDN Banyuasih</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1976d2, #42a5f5);
+    padding: 20px;
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 28px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.logo {
+    text-align: center;
+    font-size: 55px;
+}
+
+h1 {
+    text-align: center;
+    color: #1976d2;
+    margin: 5px 0;
+}
+
+.sub {
+    text-align: center;
+    color: #777;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 7px;
+    font-weight: bold;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #1976d2;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+    background: #1976d2;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(.98);
+}
+
+button:disabled {
+    background: #999;
+    cursor: not-allowed;
+}
+
+#loading {
+    display: none;
+    text-align: center;
+    margin-top: 15px;
+    color: #1976d2;
+    font-weight: bold;
+}
+
+#pesan {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+#halamanUtama {
+    display: none;
+}
+
+.data {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.data p {
+    margin: 10px 0;
+}
+
+.hadir {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+.logout {
+    background: #e53935;
+}
+
+.info {
+    text-align: center;
+    font-size: 13px;
+    color: #777;
+    margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ==================================================
+     HALAMAN LOGIN
+================================================== -->
+
+<div class="card" id="halamanLogin">
+
+    <div class="logo">🎓</div>
+
+    <h1>Absensi Siswa</h1>
+
+    <div class="sub">
+        SDN Banyuasih
+    </div>
+
+    <label for="nama">
+        Nama Siswa
+    </label>
+
+    <input
+        type="text"
+        id="nama"
+        placeholder="Masukkan nama lengkap"
+        autocomplete="off"
+    >
+
+    <label for="kelas">
+        Kelas
+    </label>
+
+    <select id="kelas">
+
+        <option value="">
+            -- Pilih Kelas --
+        </option>
+
+        <option value="4">
+            Kelas 4
+        </option>
+
+        <option value="5">
+            Kelas 5
+        </option>
+
+        <option value="6">
+            Kelas 6
+        </option>
+
+    </select>
+
+    <button
+        id="btnLogin"
+        onclick="loginSiswa()"
+    >
+        MASUK
+    </button>
+
+    <div id="loading">
+        ⏳ Menyimpan absensi...
+    </div>
+
+    <div id="pesan"></div>
+
+    <div class="info">
+        Pastikan nama dan kelas sudah benar.
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     HALAMAN UTAMA
+================================================== -->
+
+<div class="card" id="halamanUtama">
+
+    <div class="logo">
+        👋
+    </div>
+
+    <h1>
+        Selamat Datang
+    </h1>
+
+    <div class="sub">
+        Absensi berhasil
+    </div>
+
+    <div class="data">
+
+        <p>
+            <b>Nama:</b>
+            <span id="tampilNama"></span>
+        </p>
+
+        <p>
+            <b>Kelas:</b>
+            <span id="tampilKelas"></span>
+        </p>
+
+        <p>
+            <b>Tanggal:</b>
+            <span id="tampilTanggal"></span>
+        </p>
+
+        <p>
+            <b>Waktu:</b>
+            <span id="tampilWaktu"></span>
+        </p>
+
+        <p>
+            <b>Status:</b>
+            <span id="tampilStatus"></span>
+        </p>
+
+    </div>
+
+    <div class="hadir">
+
+        ✅ ABSENSI BERHASIL
+
+        <br>
+
+        <small>
+            Anda tercatat HADIR hari ini.
+        </small>
+
+    </div>
+
+    <button onclick="mulaiBelajar()">
+        📚 MULAI BELAJAR
+    </button>
+
+    <button
+        class="logout"
+        onclick="logout()"
+    >
+        KELUAR
+    </button>
+
+</div>
+
+
+<!-- ==================================================
+     FIREBASE
+================================================== -->
+
+<script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getDatabase,
+    ref,
+    push,
+    get
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+/* ==================================================
+   FIREBASE CONFIG
+================================================== */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyAxkzAATrhLg3rPPmmubY8QUw4bqtgovVk",
+
+    authDomain:
+        "sdnbanyuasih-68f01.firebaseapp.com",
+
+    databaseURL:
+        "https://sdnbanyuasih-68f01-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+    projectId:
+        "sdnbanyuasih-68f01",
+
+    storageBucket:
+        "sdnbanyuasih-68f01.firebasestorage.app",
+
+    messagingSenderId:
+        "742260762603",
+
+    appId:
+        "1:742260762603:web:3e15a0b090bb6638fc9bae"
+
+};
+
+
+/* ==================================================
+   INIT FIREBASE
+================================================== */
+
+let app;
+let db;
+
+try {
+
+    app = initializeApp(firebaseConfig);
+
+    db = getDatabase(app);
+
+    console.log(
+        "Firebase berhasil terhubung."
+    );
+
+} catch (error) {
+
+    console.error(
+        "Firebase gagal diinisialisasi:",
+        error
+    );
+
+}
+
+
+/* ==================================================
+   WAKTU INDONESIA
+================================================== */
+
+function waktuSekarang() {
+
+    const sekarang = new Date();
+
+    const tanggalID =
+        new Intl.DateTimeFormat(
+            "en-CA",
+            {
+                timeZone: "Asia/Jakarta",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            }
+        ).format(sekarang);
+
+    const tanggalTampil =
+        new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                timeZone: "Asia/Jakarta",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            }
+        ).format(sekarang);
+
+    const waktu =
+        new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                timeZone: "Asia/Jakarta",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false
+            }
+        ).format(sekarang);
+
+
+    return {
+
+        tanggalID:
+            tanggalID,
+
+        tanggal:
+            tanggalTampil,
+
+        waktu:
+            waktu
+
+    };
+
+}
+
+
+/* ==================================================
+   PESAN
+================================================== */
+
+function tampilPesan(
+    text,
+    color = "#1976d2"
+) {
+
+    const pesan =
+        document.getElementById("pesan");
+
+    pesan.innerText =
+        text;
+
+    pesan.style.color =
+        color;
+
+}
+
+
+/* ==================================================
+   LOGIN SISWA
+================================================== */
+
+window.loginSiswa =
+async function() {
+
+    const namaInput =
+        document.getElementById("nama");
+
+    const kelasInput =
+        document.getElementById("kelas");
+
+    const btn =
+        document.getElementById("btnLogin");
+
+    const loading =
+        document.getElementById("loading");
+
+
+    const nama =
+        namaInput.value.trim();
+
+    const kelas =
+        kelasInput.value;
+
+
+    /* ----------------------------------------------
+       VALIDASI
+    ---------------------------------------------- */
+
+    if (!nama) {
+
+        tampilPesan(
+            "❌ Masukkan nama siswa terlebih dahulu.",
+            "#e53935"
+        );
+
+        namaInput.focus();
+
+        return;
+    }
+
+
+    if (!kelas) {
+
+        tampilPesan(
+            "❌ Pilih kelas terlebih dahulu.",
+            "#e53935"
+        );
+
+        kelasInput.focus();
+
+        return;
+    }
+
+
+    /* ----------------------------------------------
+       CEK FIREBASE
+    ---------------------------------------------- */
+
+    if (!db) {
+
+        tampilPesan(
+            "❌ Firebase belum terhubung. Coba muat ulang halaman.",
+            "#e53935"
+        );
+
+        return;
+    }
+
+
+    btn.disabled =
+        true;
+
+    loading.style.display =
+        "block";
+
+    tampilPesan(
+        ""
+    );
+
+
+    try {
+
+        /* ------------------------------------------
+           WAKTU
+        ------------------------------------------ */
+
+        const waktu =
+            waktuSekarang();
+
+        const tanggalID =
+            waktu.tanggalID;
+
+
+        console.log(
+            "Tanggal absensi:",
+            tanggalID
+        );
+
+
+        /* ------------------------------------------
+           REFERENSI FIREBASE
+           
+           absensi/
+              2026-09-07/
+                  autoID/
+        ------------------------------------------ */
+
+        const absensiRef =
+            ref(
+                db,
+                "absensi/" + tanggalID
+            );
+
+
+        /* ------------------------------------------
+           AMBIL ABSENSI HARI INI
+        ------------------------------------------ */
+
+        const snapshot =
+            await get(absensiRef);
+
+
+        let sudahAbsen =
+            false;
+
+        let dataLama =
+            null;
+
+
+        if (snapshot.exists()) {
+
+            const semuaData =
+                snapshot.val();
+
+
+            for (
+                const id in semuaData
+            ) {
+
+                const data =
+                    semuaData[id];
+
+
+                if (
+                    data &&
+                    data.nama &&
+                    data.kelas
+                ) {
+
+                    const namaFirebase =
+                        String(
+                            data.nama
+                        )
+                        .trim()
+                        .toLowerCase();
+
+
+                    const namaInputNormal =
+                        nama
+                        .trim()
+                        .toLowerCase();
+
+
+                    const kelasFirebase =
+                        String(
+                            data.kelas
+                        );
+
+
+                    if (
+                        namaFirebase ===
+                        namaInputNormal
+                        &&
+                        kelasFirebase ===
+                        String(kelas)
+                    ) {
+
+                        sudahAbsen =
+                            true;
+
+                        dataLama =
+                            data;
+
+                        console.log(
+                            "Siswa sudah absen hari ini."
+                        );
+
+                        break;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+        /* ------------------------------------------
+           SIMPAN ABSENSI BARU
+        ------------------------------------------ */
+
+        if (!sudahAbsen) {
+
+            const dataBaru = {
+
+                nama:
+                    nama,
+
+                kelas:
+                    kelas,
+
+                tanggal:
+                    waktu.tanggal,
+
+                waktu:
+                    waktu.waktu,
+
+                status:
+                    "Hadir"
+
+            };
+
+
+            const hasilPush =
+                await push(
+                    absensiRef,
+                    dataBaru
+                );
+
+
+            console.log(
+                "Absensi berhasil disimpan.",
+                hasilPush.key
+            );
+
+
+            dataLama =
+                dataBaru;
+
+        }
+
+
+        /* ------------------------------------------
+           DATA UNTUK SESI SISWA
+        ------------------------------------------ */
+
+        const dataSiswa = {
+
+            nama:
+                dataLama.nama || nama,
+
+            kelas:
+                String(
+                    dataLama.kelas || kelas
+                ),
+
+            tanggal:
+                dataLama.tanggal ||
+                waktu.tanggal,
+
+            waktu:
+                dataLama.waktu ||
+                waktu.waktu,
+
+            status:
+                dataLama.status ||
+                "Hadir"
+
+        };
+
+
+        /* ------------------------------------------
+           SIMPAN LOCAL STORAGE
+        ------------------------------------------ */
+
+        localStorage.setItem(
+            "dataSiswa",
+            JSON.stringify(dataSiswa)
+        );
+
+
+        console.log(
+            "dataSiswa:",
+            dataSiswa
+        );
+
+
+        /* ------------------------------------------
+           TAMPILKAN HALAMAN
+        ------------------------------------------ */
+
+        tampilkanHalamanUtama(
+            dataSiswa
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "ERROR ABSENSI:",
+            error
+        );
+
+
+        let pesanError =
+            "❌ Gagal menyimpan absensi.";
+
+
+        if (
+            error &&
+            error.code
+        ) {
+
+            pesanError +=
+                "\nKode: " +
+                error.code;
+
+        }
+
+
+        if (
+            error &&
+            error.message
+        ) {
+
+            console.log(
+                error.message
+            );
+
+        }
+
+
+        tampilPesan(
+            pesanError +
+            " Periksa koneksi internet dan Firebase.",
+            "#e53935"
+        );
+
+
+        btn.disabled =
+            false;
+
+    }
+
+
+    loading.style.display =
+        "none";
+
+};
+
+
+/* ==================================================
+   TAMPILKAN HALAMAN UTAMA
+================================================== */
+
+function tampilkanHalamanUtama(
+    data
+) {
+
+    document.getElementById(
+        "halamanLogin"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "halamanUtama"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "tampilNama"
+    ).innerText =
+        data.nama;
+
+
+    document.getElementById(
+        "tampilKelas"
+    ).innerText =
+        "Kelas " +
+        data.kelas;
+
+
+    document.getElementById(
+        "tampilTanggal"
+    ).innerText =
+        data.tanggal;
+
+
+    document.getElementById(
+        "tampilWaktu"
+    ).innerText =
+        data.waktu;
+
+
+    document.getElementById(
+        "tampilStatus"
+    ).innerText =
+        "✅ " +
+        data.status;
+
+}
+
+
+/* ==================================================
+   MULAI BELAJAR
+================================================== */
+
+window.mulaiBelajar =
+function() {
+
+    const data =
+        localStorage.getItem(
+            "dataSiswa"
+        );
+
+
+    if (data) {
+
+        try {
+
+            const siswa =
+                JSON.parse(data);
+
+
+            alert(
+                "Selamat belajar, " +
+                siswa.nama +
+                "!"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    }
+
+
+    window.location.href =
+        "https://sdnbanyuasih2.github.io/Sdnbanyuasih-kelas-jauh/";
+
+};
+
+
+/* ==================================================
+   LOGOUT
+================================================== */
+
+window.logout =
+function() {
+
+    localStorage.removeItem(
+        "dataSiswa"
+    );
+
+
+    location.reload();
+
+};
+
+
+/* ==================================================
+   CEK LOGIN SEBELUMNYA
+================================================== */
+
+const loginSebelumnya =
+    localStorage.getItem(
+        "dataSiswa"
+    );
+
+
+if (loginSebelumnya) {
+
+    try {
+
+        const data =
+            JSON.parse(
+                loginSebelumnya
+            );
+
+
+        if (
+            data &&
+            data.nama &&
+            data.kelas
+        ) {
+
+            tampilkanHalamanUtama(
+                data
+            );
+
+        } else {
+
+            localStorage.removeItem(
+                "dataSiswa"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Data login rusak:",
+            error
+        );
+
+
+        localStorage.removeItem(
+            "dataSiswa"
+        );
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
